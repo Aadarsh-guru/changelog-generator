@@ -8,7 +8,50 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { Loader2, Copy } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
+import ReactMarkdown from "react-markdown";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+const markdownStyles = `
+  h2 {
+    font-size: 1.75em;
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  h3 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+  }
+  ul, ol {
+    list-style-position: inside;
+    margin-left: 1.5em;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+  blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: 1em;
+    margin: 1em 0;
+    color: #6b7280;
+    background-color: #f9fafb;
+  }
+  code {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    padding: 0.2em 0.4em;
+    border-radius: 0.3em;
+  }
+  pre {
+    background-color: #f3f4f6;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+  }
+`;
+
 
 export function ChangelogGenerator() {
 
@@ -95,14 +138,10 @@ export function ChangelogGenerator() {
         })
     }
 
-    const exportChangelog = (format: 'csv' | 'md') => {
+    const exportChangelog = (format: 'md') => {
         let content = changelog
         let filename = `changelog-${version}.${format}`
         let mimeType = 'text/plain'
-        if (format === 'csv') {
-            content = changelog.split('\n').map(line => line.replace(/^[#\-*]\s*/, '')).join('\n')
-            mimeType = 'text/csv'
-        }
         const blob = new Blob([content], { type: mimeType })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -196,12 +235,11 @@ export function ChangelogGenerator() {
                             <Copy className="mr-2 h-4 w-4" />
                             Copy
                         </Button>
-                        <Select onValueChange={(value) => exportChangelog(value as 'csv' | 'md')}>
+                        <Select onValueChange={(value) => exportChangelog(value as 'md')}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Export as..." />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="csv">Export as CSV</SelectItem>
                                 <SelectItem value="md">Export as Markdown</SelectItem>
                             </SelectContent>
                         </Select>
@@ -211,9 +249,25 @@ export function ChangelogGenerator() {
             {changelog && (
                 <CardContent>
                     <h3 className="text-lg font-semibold mb-2">Generated Changelog</h3>
-                    <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md">{changelog}</pre>
+                    <Tabs defaultValue="preview">
+                        <TabsList>
+                            <TabsTrigger value="preview">Preview</TabsTrigger>
+                            <TabsTrigger value="raw">Raw</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="preview">
+                            <style>{markdownStyles}</style>
+                            <ReactMarkdown>
+                                {changelog}
+                            </ReactMarkdown>
+                        </TabsContent>
+                        <TabsContent value="raw">
+                            <pre className="bg-muted p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
+                                {changelog}
+                            </pre>
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
             )}
         </Card>
-    )
-}
+    );
+};
