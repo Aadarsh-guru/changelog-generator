@@ -60,7 +60,7 @@ export function ChangelogGenerator() {
     const [branch, setBranch] = useState('main')
     const [changelog, setChangelog] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [version, setVersion] = useState('')
+    const [version, setVersion] = useState('1.0.0')
     const { toast } = useToast()
 
     const generateChangelog = async (inputType: 'manual' | 'github') => {
