@@ -1,56 +1,15 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
-import { Loader2, Copy } from 'lucide-react'
+import { Loader2, Copy, LinkIcon } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
-import ReactMarkdown from "react-markdown";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-const markdownStyles = `
-  h2 {
-    font-size: 1.75em;
-    font-weight: bold;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-  }
-  h3 {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-top: 1.25em;
-    margin-bottom: 0.5em;
-  }
-  ul, ol {
-    list-style-position: inside;
-    margin-left: 1.5em;
-  }
-  li {
-    margin-bottom: 0.5em;
-  }
-  blockquote {
-    border-left: 4px solid #ccc;
-    padding-left: 1em;
-    margin: 1em 0;
-    color: #6b7280;
-    background-color: #f9fafb;
-  }
-  code {
-    background-color: #f3f4f6;
-    color: #1f2937;
-    padding: 0.2em 0.4em;
-    border-radius: 0.3em;
-  }
-  pre {
-    background-color: #f3f4f6;
-    padding: 1em;
-    border-radius: 0.5em;
-    overflow-x: auto;
-  }
-`;
+import { MDPreview } from './MDPreview'
 
 
 export function ChangelogGenerator() {
@@ -59,9 +18,11 @@ export function ChangelogGenerator() {
     const [githubUrl, setGithubUrl] = useState('')
     const [branch, setBranch] = useState('main')
     const [changelog, setChangelog] = useState('')
+    const [changelogId, setChangelogId] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [version, setVersion] = useState('1.0.0')
     const { toast } = useToast()
+    const urlInputRef = useRef<HTMLInputElement>(null)
 
     const generateChangelog = async (inputType: 'manual' | 'github') => {
         setIsLoading(true)
@@ -91,6 +52,7 @@ export function ChangelogGenerator() {
 
             const data = await response.json()
             setChangelog(data.changelog)
+            setChangelogId(data.id)
         } catch (error) {
             console.error('Error generating changelog:', error)
             toast({
@@ -151,6 +113,19 @@ export function ChangelogGenerator() {
         a.click()
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
+    }
+
+    const changelogUrl = `${window.location.origin}/changelogs/${changelogId}`
+
+    const handleCopyClick = () => {
+        if (urlInputRef.current) {
+            urlInputRef.current.select()
+            navigator.clipboard.writeText(changelogUrl)
+            toast({
+                title: "Copied",
+                description: "Changelog copied to clipboard",
+            })
+        }
     }
 
     return (
@@ -249,23 +224,34 @@ export function ChangelogGenerator() {
             {changelog && (
                 <CardContent>
                     <h3 className="text-lg font-semibold mb-2">Generated Changelog</h3>
-                    <Tabs defaultValue="preview">
-                        <TabsList>
-                            <TabsTrigger value="preview">Preview</TabsTrigger>
-                            <TabsTrigger value="raw">Raw</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="preview">
-                            <style>{markdownStyles}</style>
-                            <ReactMarkdown>
-                                {changelog}
-                            </ReactMarkdown>
-                        </TabsContent>
-                        <TabsContent value="raw">
-                            <pre className="bg-muted p-4 rounded-md overflow-x-auto whitespace-pre-wrap">
-                                {changelog}
-                            </pre>
-                        </TabsContent>
-                    </Tabs>
+                    {changelogId && (
+                        <div className="w-full mb-2">
+                            <div className="flex items-center space-x-2">
+                                <div className="relative flex-grow">
+                                    <LinkIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        id="changelogUrl"
+                                        ref={urlInputRef}
+                                        value={changelogUrl}
+                                        readOnly
+                                        className="pl-10 pr-20"
+                                    />
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                                        onClick={handleCopyClick}
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <Button onClick={() => window.open(changelogUrl, '_blank')}>
+                                    View
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                    <MDPreview changelog={changelog} />
                 </CardContent>
             )}
         </Card>
