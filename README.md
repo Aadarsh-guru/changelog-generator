@@ -29,8 +29,8 @@ The application consists of two main parts:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-username/ai-changelog-generator.git
-   cd ai-changelog-generator
+   git clone https://github.com/Aadarsh-guru/changelog-generator.git
+   cd changelog-generator
    ```
 
 2. Install dependencies:
