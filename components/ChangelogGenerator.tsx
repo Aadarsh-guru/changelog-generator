@@ -115,7 +115,7 @@ export function ChangelogGenerator() {
         URL.revokeObjectURL(url)
     }
 
-    const changelogUrl = `${window.location.origin}/changelogs/${changelogId}`
+    const changelogUrl = `${process.env.NEXT_PUBLIC_APP_URL}/changelogs/${changelogId}`
 
     const handleCopyClick = () => {
         if (urlInputRef.current) {
